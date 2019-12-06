@@ -3,9 +3,12 @@ module PhotoGroove exposing (main)
 import Array exposing (Array)
 import Browser
 import Html exposing (..)
-import Html.Attributes exposing (..)
+import Html.Attributes as Attr exposing (..)
 import Html.Events exposing (..)
 import Http
+import Json.Decode as Decode exposing (..)
+import Json.Decode.Pipeline exposing (optional, required)
+import Json.Encode as Encode exposing (..)
 import Random
 
 
@@ -28,12 +31,30 @@ view model =
                 [ text ("Error: " ++ errorMessage) ]
 
 
+viewFilter : String -> Int -> Html Msg
+viewFilter name magnitude =
+    div [ class "filter-slider" ]
+        [ label [] [ text name ]
+        , rangeSlider
+            [ Attr.max "11"
+            , Attr.property "val" (Encode.int magnitude)
+            ]
+            []
+        , label [] [ text (String.fromInt magnitude) ]
+        ]
+
+
 viewLoaded : List Photo -> String -> ThumbnailSize -> List (Html Msg)
 viewLoaded photos selectedUrl chosenSize =
     [ h1 [] [ text "Photo Groove" ]
     , button
         [ onClick ClickedSurpriseMe ]
         [ text "Surprise Me!" ]
+    , div [ class "filters" ]
+        [ viewFilter "Hue" 0
+        , viewFilter "Ripple" 0
+        , viewFilter "Noise" 0
+        ]
     , h3 [] [ text "Thumbnail Size:" ]
     , div [ id "choose-size" ]
         (List.map viewSizeChooser [ Small, Medium, Large ])
@@ -51,6 +72,7 @@ viewThumbnail : String -> Photo -> Html Msg
 viewThumbnail selectedUrl thumb =
     img
         [ src (urlPrefix ++ thumb.url)
+        , title (thumb.title ++ " [" ++ String.fromInt thumb.size ++ " KB]")
         , classList [ ( "selected", selectedUrl == thumb.url ) ]
         , onClick (ClickedPhoto thumb.url)
         ]
@@ -79,7 +101,10 @@ sizeToString size =
 
 
 type alias Photo =
-    { url : String }
+    { url : String
+    , size : Int
+    , title : String
+    }
 
 
 type Status
@@ -105,7 +130,7 @@ type Msg
     | ClickedSize ThumbnailSize
     | ClickedSurpriseMe
     | GotRandomPhoto Photo
-    | GotPhotos (Result Http.Error String)
+    | GotPhotos (Result Http.Error (List Photo))
 
 
 initialModel : Model
@@ -143,14 +168,10 @@ update msg model =
         GotRandomPhoto photo ->
             ( { model | status = selectUrl photo.url model.status }, Cmd.none )
 
-        GotPhotos (Ok responseStr) ->
-            case String.split "," responseStr of
-                (firstUrl :: _) as urls ->
-                    let
-                        photos =
-                            List.map Photo urls
-                    in
-                    ( { model | status = Loaded photos firstUrl }, Cmd.none )
+        GotPhotos (Ok photos) ->
+            case photos of
+                (first :: rest) as urls ->
+                    ( { model | status = Loaded photos first.url }, Cmd.none )
 
                 [] ->
                     ( { model | status = Errored "0 photos found" }, Cmd.none )
@@ -162,8 +183,8 @@ update msg model =
 initialCmd : Cmd Msg
 initialCmd =
     Http.get
-        { url = "http://elm-in-action.com/photos/list"
-        , expect = Http.expectString GotPhotos
+        { url = "http://elm-in-action.com/photos/list.json"
+        , expect = Http.expectJson GotPhotos (Decode.list photoDecoder)
         }
 
 
@@ -180,6 +201,14 @@ selectUrl url status =
             status
 
 
+photoDecoder : Decoder Photo
+photoDecoder =
+    succeed Photo
+        |> required "url" Decode.string
+        |> required "size" Decode.int
+        |> optional "title" Decode.string "(untitled)"
+
+
 main : Program () Model Msg
 main =
     Browser.element
@@ -188,3 +217,8 @@ main =
         , update = update
         , subscriptions = \_ -> Sub.none
         }
+
+
+rangeSlider : List (Attribute msg) -> List (Html msg) -> Html msg
+rangeSlider attributes children =
+    node "range-slider" attributes children
