@@ -6018,7 +6018,14 @@ var author$project$PhotoGroove$initialCmd = elm$http$Http$get(
 	});
 var author$project$PhotoGroove$Loading = {$: 'Loading'};
 var author$project$PhotoGroove$Medium = {$: 'Medium'};
-var author$project$PhotoGroove$initialModel = {chosenSize: author$project$PhotoGroove$Medium, hue: 5, noise: 5, ripple: 5, status: author$project$PhotoGroove$Loading};
+var author$project$PhotoGroove$initialModel = {activity: '', chosenSize: author$project$PhotoGroove$Medium, hue: 5, noise: 5, ripple: 5, status: author$project$PhotoGroove$Loading};
+var author$project$PhotoGroove$GotActivity = function (a) {
+	return {$: 'GotActivity', a: a};
+};
+var author$project$PhotoGroove$activityChanges = _Platform_incomingPort('activityChanges', elm$json$Json$Decode$string);
+var author$project$PhotoGroove$subscriptions = function (model) {
+	return author$project$PhotoGroove$activityChanges(author$project$PhotoGroove$GotActivity);
+};
 var author$project$PhotoGroove$Errored = function (a) {
 	return {$: 'Errored', a: a};
 };
@@ -6418,12 +6425,19 @@ var author$project$PhotoGroove$update = F2(
 					_Utils_update(
 						model,
 						{ripple: ripple}));
-			default:
+			case 'SlidNoise':
 				var noise = msg.a;
 				return author$project$PhotoGroove$applyFilters(
 					_Utils_update(
 						model,
 						{noise: noise}));
+			default:
+				var activity = msg.a;
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{activity: activity}),
+					elm$core$Platform$Cmd$none);
 		}
 	});
 var author$project$PhotoGroove$ClickedSurpriseMe = {$: 'ClickedSurpriseMe'};
@@ -6674,6 +6688,16 @@ var author$project$PhotoGroove$viewLoaded = F3(
 				_List_fromArray(
 					[
 						elm$html$Html$text('Surprise Me!')
+					])),
+				A2(
+				elm$html$Html$div,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$class('activity')
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text(model.activity)
 					])),
 				A2(
 				elm$html$Html$div,
@@ -6954,16 +6978,12 @@ var elm$url$Url$fromString = function (str) {
 		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
 };
 var elm$browser$Browser$element = _Browser_element;
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
 var author$project$PhotoGroove$main = elm$browser$Browser$element(
 	{
 		init: function (_n0) {
 			return _Utils_Tuple2(author$project$PhotoGroove$initialModel, author$project$PhotoGroove$initialCmd);
 		},
-		subscriptions: function (_n1) {
-			return elm$core$Platform$Sub$none;
-		},
+		subscriptions: author$project$PhotoGroove$subscriptions,
 		update: author$project$PhotoGroove$update,
 		view: author$project$PhotoGroove$view
 	});
