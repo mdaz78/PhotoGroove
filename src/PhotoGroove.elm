@@ -51,6 +51,7 @@ viewLoaded photos selectedUrl model =
     , button
         [ onClick ClickedSurpriseMe ]
         [ text "Surprise Me!" ]
+    , div [ class "activity" ] [ text model.activity ]
     , div [ class "filters" ]
         [ viewFilter SlidHue "Hue" model.hue
         , viewFilter SlidRipple "Ripple" model.ripple
@@ -120,10 +121,14 @@ type alias Model =
     , hue : Int
     , ripple : Int
     , noise : Int
+    , activity : String
     }
 
 
 port setFilters : FilterOptions -> Cmd msg
+
+
+port activityChanges : (String -> msg) -> Sub msg
 
 
 type alias FilterOptions =
@@ -147,6 +152,7 @@ type Msg
     | SlidHue Int
     | SlidRipple Int
     | SlidNoise Int
+    | GotActivity String
 
 
 initialModel : Model
@@ -156,6 +162,7 @@ initialModel =
     , hue = 5
     , ripple = 5
     , noise = 5
+    , activity = ""
     }
 
 
@@ -207,6 +214,9 @@ update msg model =
         SlidNoise noise ->
             applyFilters { model | noise = noise }
 
+        GotActivity activity ->
+            ( { model | activity = activity }, Cmd.none )
+
 
 initialCmd : Cmd Msg
 initialCmd =
@@ -243,8 +253,13 @@ main =
         { init = \_ -> ( initialModel, initialCmd )
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    activityChanges GotActivity
 
 
 rangeSlider : List (Attribute msg) -> List (Html msg) -> Html msg

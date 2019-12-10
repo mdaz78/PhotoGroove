@@ -26,6 +26,10 @@
           Pasta.apply(canvasElem, options);
         });
       });
+
+      Pasta.addActivityListener(activity => {
+        app.ports.activityChanges.send(activity);
+      });
     </script>
   </body>
 </html>
