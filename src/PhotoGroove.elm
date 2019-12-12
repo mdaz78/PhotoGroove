@@ -1,9 +1,9 @@
-port module PhotoGroove exposing (main)
+port module PhotoGroove exposing (Model, Msg(..), Photo, Status(..), initialModel, main, photoDecoder, update, urlPrefix, view)
 
 import Array exposing (Array)
 import Browser
 import Html exposing (..)
-import Html.Attributes as Attr exposing (..)
+import Html.Attributes as Attr exposing (class, classList, id, name, src, title, type_)
 import Html.Events exposing (on, onClick)
 import Http
 import Json.Decode as Decode exposing (Decoder, at, int, list, string)
