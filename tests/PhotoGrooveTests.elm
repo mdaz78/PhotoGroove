@@ -24,6 +24,58 @@ decoderTest =
                 |> Expect.equal (Ok "(untitled)")
 
 
+firstImageGetsSelected : Test
+firstImageGetsSelected =
+    fuzz (Fuzz.intRange 1 100) "When the photos load, the first one gets selected" <|
+        \urlCount ->
+            let
+                urls : List String
+                urls =
+                    List.range 1 urlCount
+                        |> List.map (\num -> String.fromInt num ++ ".png")
+
+                photos =
+                    List.map photoFromUrl urls
+
+                firstPhoto =
+                    List.head photos
+
+                selectedUrl =
+                    case firstPhoto of
+                        Just photo ->
+                            photo.url
+
+                        Nothing ->
+                            ""
+            in
+            initialModel
+                |> update (GotPhotos (Ok photos))
+                |> Tuple.first
+                |> .status
+                |> Expect.equal (Loaded photos selectedUrl)
+
+
+clickedPhotoTest : Test
+clickedPhotoTest =
+    test "ClickedPhoto message makes the photo selected" <|
+        \_ ->
+            let
+                photo =
+                    photoFromUrl "1.png"
+
+                photos =
+                    [ photo ]
+
+                model =
+                    { initialModel | status = Loaded [ photo ] photo.url }
+            in
+            model
+                |> update (ClickedPhoto photo.url)
+                |> Tuple.first
+                |> .status
+                |> Expect.equal (Loaded photos "1.png")
+
+
 
 -- slideHueSetsHue : Test
 -- slideHueSetsHue =
