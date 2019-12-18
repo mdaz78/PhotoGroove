@@ -1,6 +1,7 @@
 module PhotoFolders exposing (main)
 
 import Browser
+import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
@@ -11,12 +12,15 @@ import Json.Decode.Pipeline exposing (required)
 
 type alias Model =
     { selectedPhotoUrl : Maybe String
+    , photos : Dict String Photo
     }
 
 
 initialModel : Model
 initialModel =
-    { selectedPhotoUrl = Nothing }
+    { selectedPhotoUrl = Nothing
+    , photos = Dict.empty
+    }
 
 
 init : () -> ( Model, Cmd Msg )
@@ -31,7 +35,15 @@ init _ =
 
 modelDecoder : Decoder Model
 modelDecoder =
-    Decode.succeed initialModel
+    Decode.succeed
+        { selectedPhotoUrl = Just "trevi"
+        , photos =
+            Dict.fromList
+                [ ( "trevi", { title = "Trevi", relatedUrls = [ "coli", "fresco" ], size = 34, url = "trevi" } )
+                , ( "fresco", { title = "Fresco", relatedUrls = [ "trevi" ], size = 46, url = "fresco" } )
+                , ( "coli", { title = "Coliseum", relatedUrls = [ "trevi", "fresco" ], size = 36, url = "coli" } )
+                ]
+        }
 
 
 type Msg
@@ -54,7 +66,22 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    h1 [] [ text "The Grooviest Folders the world has ever seen" ]
+    let
+        photoByUrl : String -> Maybe Photo
+        photoByUrl url =
+            Dict.get url model.photos
+
+        selectedPhoto : Html Msg
+        selectedPhoto =
+            case Maybe.andThen photoByUrl model.selectedPhotoUrl of
+                Just photo ->
+                    viewSelectedPhoto photo
+
+                Nothing ->
+                    text ""
+    in
+    div [ class "content" ]
+        [ div [ class "selected-photo" ] [ selectedPhoto ] ]
 
 
 main : Program () Model Msg
@@ -100,4 +127,4 @@ viewRelatedPhoto url =
 
 urlPrefix : String
 urlPrefix =
-    "http://elm-in-action.com"
+    "http://elm-in-action.com/"
