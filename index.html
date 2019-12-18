@@ -16,21 +16,21 @@
     <script src="http://elm-in-action.com/pasta.js"></script>
     <script src="elm.js"></script>
     <script>
-      const app = Elm.PhotoGroove.init({
-        node: document.getElementById("app"),
-        flags: Pasta.version
+      const app = Elm.PhotoFolders.init({
+        node: document.getElementById("app")
+        // flags: Pasta.version
       });
 
-      app.ports.setFilters.subscribe(options => {
-        requestAnimationFrame(() => {
-          canvasElem = document.getElementById("main-canvas");
-          Pasta.apply(canvasElem, options);
-        });
-      });
+      // app.ports.setFilters.subscribe(options => {
+      //   requestAnimationFrame(() => {
+      //     canvasElem = document.getElementById("main-canvas");
+      //     Pasta.apply(canvasElem, options);
+      //   });
+      // });
 
-      Pasta.addActivityListener(activity => {
-        app.ports.activityChanges.send(activity);
-      });
+      // Pasta.addActivityListener(activity => {
+      //   app.ports.activityChanges.send(activity);
+      // });
     </script>
   </body>
 </html>
