@@ -6724,7 +6724,7 @@ var $author$project$Main$parser = $elm$url$Url$Parser$oneOf(
 			$author$project$Main$SelectedPhoto,
 			A2(
 				$elm$url$Url$Parser$slash,
-				$elm$url$Url$Parser$s('photos/'),
+				$elm$url$Url$Parser$s('photos'),
 				$elm$url$Url$Parser$string))
 		]));
 var $author$project$Main$FoldersPage = function (a) {
@@ -6754,13 +6754,13 @@ var $author$project$Main$GotGalleryMsg = function (a) {
 };
 var $author$project$Main$toGallery = F2(
 	function (model, _v0) {
-		var galleries = _v0.a;
+		var gallery = _v0.a;
 		var cmd = _v0.b;
 		return _Utils_Tuple2(
 			_Utils_update(
 				model,
 				{
-					page: $author$project$Main$GalleryPage(galleries)
+					page: $author$project$Main$GalleryPage(gallery)
 				}),
 			A2($elm$core$Platform$Cmd$map, $author$project$Main$GotGalleryMsg, cmd));
 	});
@@ -6804,28 +6804,8 @@ var $author$project$Main$init = F3(
 			url,
 			{key: key, page: $author$project$Main$NotFound, version: version});
 	});
-var $elm$core$Platform$Sub$map = _Platform_map;
 var $elm$core$Platform$Sub$batch = _Platform_batch;
 var $elm$core$Platform$Sub$none = $elm$core$Platform$Sub$batch(_List_Nil);
-var $author$project$PhotoGallery$GotActivity = function (a) {
-	return {$: 'GotActivity', a: a};
-};
-var $author$project$PhotoGallery$activityChanges = _Platform_incomingPort('activityChanges', $elm$json$Json$Decode$string);
-var $author$project$PhotoGallery$subscriptions = function (model) {
-	return $author$project$PhotoGallery$activityChanges($author$project$PhotoGallery$GotActivity);
-};
-var $author$project$Main$subscriptions = function (model) {
-	var _v0 = model.page;
-	if (_v0.$ === 'GalleryPage') {
-		var gallery = _v0.a;
-		return A2(
-			$elm$core$Platform$Sub$map,
-			$author$project$Main$GotGalleryMsg,
-			$author$project$PhotoGallery$subscriptions(gallery));
-	} else {
-		return $elm$core$Platform$Sub$none;
-	}
-};
 var $elm$browser$Browser$Navigation$load = _Browser_load;
 var $elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
 var $elm$url$Url$addPort = F2(
@@ -7334,29 +7314,6 @@ var $author$project$PhotoGallery$update = F2(
 					$elm$core$Platform$Cmd$none);
 		}
 	});
-var $author$project$Main$urlToPage = F2(
-	function (version, url) {
-		var _v0 = A2($elm$url$Url$Parser$parse, $author$project$Main$parser, url);
-		if (_v0.$ === 'Just') {
-			switch (_v0.a.$) {
-				case 'Gallery':
-					var _v1 = _v0.a;
-					return $author$project$Main$GalleryPage(
-						$author$project$PhotoGallery$init(version).a);
-				case 'Folders':
-					var _v2 = _v0.a;
-					return $author$project$Main$FoldersPage(
-						$author$project$PhotoFolders$init($elm$core$Maybe$Nothing).a);
-				default:
-					var filename = _v0.a.a;
-					return $author$project$Main$FoldersPage(
-						$author$project$PhotoFolders$init(
-							$elm$core$Maybe$Just(filename)).a);
-			}
-		} else {
-			return $author$project$Main$NotFound;
-		}
-	});
 var $author$project$Main$update = F2(
 	function (msg, model) {
 		switch (msg.$) {
@@ -7378,13 +7335,7 @@ var $author$project$Main$update = F2(
 				}
 			case 'ChangedUrl':
 				var url = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							page: A2($author$project$Main$urlToPage, model.version, url)
-						}),
-					$elm$core$Platform$Cmd$none);
+				return A2($author$project$Main$updateUrl, url, model);
 			case 'GotFoldersMsg':
 				var foldersMsg = msg.a;
 				var _v2 = model.page;
@@ -7948,7 +7899,7 @@ var $author$project$Main$viewFooter = A2(
 	_List_Nil,
 	_List_fromArray(
 		[
-			$elm$html$Html$text('One is never alone with a rubber duck. - Douglas Adams')
+			$elm$html$Html$text('One is never alone with a rubber duck. -Douglas Adams')
 		]));
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $author$project$Main$isActive = function (_v0) {
@@ -8065,9 +8016,18 @@ var $author$project$Main$view = function (model) {
 				content,
 				$author$project$Main$viewFooter
 			]),
-		title: 'Photo Groove, SPA style'
+		title: 'Photo Groove, SPA Style'
 	};
 };
 var $author$project$Main$main = $elm$browser$Browser$application(
-	{init: $author$project$Main$init, onUrlChange: $author$project$Main$ChangedUrl, onUrlRequest: $author$project$Main$ClickedLink, subscriptions: $author$project$Main$subscriptions, update: $author$project$Main$update, view: $author$project$Main$view});
+	{
+		init: $author$project$Main$init,
+		onUrlChange: $author$project$Main$ChangedUrl,
+		onUrlRequest: $author$project$Main$ClickedLink,
+		subscriptions: function (_v0) {
+			return $elm$core$Platform$Sub$none;
+		},
+		update: $author$project$Main$update,
+		view: $author$project$Main$view
+	});
 _Platform_export({'Main':{'init':$author$project$Main$main($elm$json$Json$Decode$float)(0)}});}(this));

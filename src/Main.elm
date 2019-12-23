@@ -12,10 +12,7 @@ import Url.Parser as Parser exposing ((</>), Parser, s, string)
 
 
 type alias Model =
-    { page : Page
-    , key : Nav.Key
-    , version : Float
-    }
+    { page : Page, key : Nav.Key, version : Float }
 
 
 type Page
@@ -46,18 +43,13 @@ view model =
                 NotFound ->
                     text "Not Found"
     in
-    { title = "Photo Groove, SPA style"
+    { title = "Photo Groove, SPA Style"
     , body =
         [ lazy viewHeader model.page
         , content
         , viewFooter
         ]
     }
-
-
-viewFooter : Html msg
-viewFooter =
-    footer [] [ text "One is never alone with a rubber duck. - Douglas Adams" ]
 
 
 viewHeader : Page -> Html Msg
@@ -72,7 +64,7 @@ viewHeader page =
                 , navLink Gallery { url = "/gallery", caption = "Gallery" }
                 ]
 
-        navLink : Route -> { url : String, caption : String } -> Html Msg
+        navLink : Route -> { url : String, caption : String } -> Html msg
         navLink route { url, caption } =
             li [ classList [ ( "active", isActive { link = route, page = page } ) ] ]
                 [ a [ href url ] [ text caption ] ]
@@ -83,6 +75,7 @@ viewHeader page =
 isActive : { link : Route, page : Page } -> Bool
 isActive { link, page } =
     case ( link, page ) of
+        --------------------------------------------
         ( Gallery, GalleryPage _ ) ->
             True
 
@@ -97,6 +90,11 @@ isActive { link, page } =
 
         ( SelectedPhoto _, _ ) ->
             False
+
+
+viewFooter : Html msg
+viewFooter =
+    footer [] [ text "One is never alone with a rubber duck. -Douglas Adams" ]
 
 
 type Msg
@@ -118,7 +116,7 @@ update msg model =
                     ( model, Nav.pushUrl model.key (Url.toString url) )
 
         ChangedUrl url ->
-            ( { model | page = urlToPage model.version url }, Cmd.none )
+            updateUrl url model
 
         GotFoldersMsg foldersMsg ->
             case model.page of
@@ -137,15 +135,17 @@ update msg model =
                     ( model, Cmd.none )
 
 
-toGallery : Model -> ( Gallery.Model, Cmd Gallery.Msg ) -> ( Model, Cmd Msg )
-toGallery model ( galleries, cmd ) =
-    ( { model | page = GalleryPage galleries }, Cmd.map GotGalleryMsg cmd )
-
-
 toFolders : Model -> ( Folders.Model, Cmd Folders.Msg ) -> ( Model, Cmd Msg )
 toFolders model ( folders, cmd ) =
     ( { model | page = FoldersPage folders }
     , Cmd.map GotFoldersMsg cmd
+    )
+
+
+toGallery : Model -> ( Gallery.Model, Cmd Gallery.Msg ) -> ( Model, Cmd Msg )
+toGallery model ( gallery, cmd ) =
+    ( { model | page = GalleryPage gallery }
+    , Cmd.map GotGalleryMsg cmd
     )
 
 
@@ -205,7 +205,7 @@ parser =
     Parser.oneOf
         [ Parser.map Folders Parser.top
         , Parser.map Gallery (s "gallery")
-        , Parser.map SelectedPhoto (s "photos/" </> Parser.string)
+        , Parser.map SelectedPhoto (s "photos" </> Parser.string)
         ]
 
 
@@ -215,7 +215,7 @@ main =
         { init = init
         , onUrlRequest = ClickedLink
         , onUrlChange = ChangedUrl
-        , subscriptions = subscriptions
+        , subscriptions = \_ -> Sub.none
         , update = update
         , view = view
         }
